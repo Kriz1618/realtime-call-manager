@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import type Redis from 'ioredis';
 import { RedisIdempotencyStore } from './redis-idempotency.store';
 
@@ -6,6 +7,16 @@ describe('RedisIdempotencyStore when Redis fails', () => {
     set: jest.fn().mockRejectedValue(new Error('connection refused')),
     del: jest.fn().mockRejectedValue(new Error('connection refused')),
   } as unknown as Redis;
+
+  let warnSpy: jest.SpiedFunction<typeof Logger.prototype.warn>;
+
+  beforeEach(() => {
+    warnSpy = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
 
   it('lets the request through so the database decides', async () => {
     const store = new RedisIdempotencyStore(broken);

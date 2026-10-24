@@ -38,6 +38,7 @@ describe('POST /webhooks/calls (e2e)', () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     await app.init();
+    await app.listen(0);
     prisma = app.get(PrismaService);
     redis = app.get<Redis>(REDIS_CLIENT);
     secret = app.get(ConfigService).getOrThrow<string>('WEBHOOK_SECRET');
