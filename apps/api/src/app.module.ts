@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { createObserveModule } from '@nestjs/observe';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
 import { CallsModule } from './calls/calls.module';
@@ -29,7 +27,5 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     RedisModule,
     CallsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
