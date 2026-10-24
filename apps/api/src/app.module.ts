@@ -4,6 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
+import { CallsModule } from './calls/calls.module';
+import { PrismaModule } from './shared/prisma/prisma.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -22,6 +24,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       envFilePath: ['../../.env'],
       validate: validateEnv,
     }),
+    PrismaModule,
+    CallsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
