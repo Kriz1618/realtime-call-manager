@@ -5,6 +5,9 @@
   "engines": { "node": ">=22" },
   "scripts": {
     "build:contracts": "pnpm --filter @rcm/contracts build",
+    "test": "pnpm --filter api test",
+    "test:int": "pnpm --filter api test:int",
+    "test:e2e": "pnpm --filter api test:e2e",
     "test:db:prepare": "bash scripts/prepare-test-db.sh"
   }
 }
