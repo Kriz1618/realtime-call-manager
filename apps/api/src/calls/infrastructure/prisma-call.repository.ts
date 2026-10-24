@@ -3,7 +3,7 @@ import type { Call as CallRow } from '../../generated/prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { Call } from '../domain/call';
 import { PhoneNumber } from '../domain/phone-number';
-import type { CallRepository, InsertResult } from '../domain/ports/call.repository';
+import type { CallListCriteria, CallPage, CallRepository, InsertResult } from '../domain/ports/call.repository';
 
 @Injectable()
 export class PrismaCallRepository implements CallRepository {
@@ -25,6 +25,33 @@ export class PrismaCallRepository implements CallRepository {
   async findByCallId(callId: string): Promise<Call | null> {
     const row = await this.prisma.call.findUnique({ where: { callId } });
     return row ? toDomain(row) : null;
+  }
+
+  async list(c: CallListCriteria): Promise<CallPage> {
+    const where = {
+      ...(c.search ? { phoneNumber: { contains: c.search } } : {}),
+      ...(c.agent ? { agent: c.agent } : {}),
+      ...(c.isSpam !== undefined ? { isSpam: c.isSpam } : {}),
+      ...(c.isRepeatCaller !== undefined ? { isRepeatCaller: c.isRepeatCaller } : {}),
+      ...(c.from || c.to
+        ? { receivedAt: { ...(c.from ? { gte: c.from } : {}), ...(c.to ? { lte: c.to } : {}) } }
+        : {}),
+    };
+    const primary =
+      c.sortBy === 'durationSeconds' ? { durationSeconds: c.order } : { receivedAt: c.order };
+
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.call.findMany({
+        where,
+        // The id tiebreaker keeps pages stable when many rows share the same sort value.
+        orderBy: [primary, { id: 'asc' }],
+        skip: (c.page - 1) * c.pageSize,
+        take: c.pageSize,
+      }),
+      this.prisma.call.count({ where }),
+    ]);
+
+    return { items: rows.map(toDomain), total };
   }
 
   countByPhoneNumberBefore(phoneNumber: PhoneNumber, before: Date): Promise<number> {

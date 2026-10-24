@@ -2,7 +2,7 @@ import { Call, NewCallInput } from '../domain/call';
 import { InvalidCallError } from '../domain/errors';
 import type { PhoneNumber } from '../domain/phone-number';
 import type { CallEventPublisher } from '../domain/ports/call-event-publisher';
-import type { CallRepository, InsertResult } from '../domain/ports/call.repository';
+import type { CallPage, CallRepository, InsertResult } from '../domain/ports/call.repository';
 import type { IdempotencyStore } from '../domain/ports/idempotency-store';
 import { RegisterIncomingCall } from './register-incoming-call';
 
@@ -23,6 +23,10 @@ class InMemoryCallRepository implements CallRepository {
 
   async findByCallId(callId: string): Promise<Call | null> {
     return this.stored.get(callId) ?? null;
+  }
+
+  async list(): Promise<CallPage> {
+    return { items: [...this.stored.values()], total: this.stored.size };
   }
 
   async countByPhoneNumberBefore(phoneNumber: PhoneNumber, before: Date): Promise<number> {

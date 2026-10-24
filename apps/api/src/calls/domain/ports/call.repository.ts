@@ -12,6 +12,28 @@ export interface CallRepository {
   insertIfAbsent(call: Call): Promise<InsertResult>;
   findByCallId(callId: string): Promise<Call | null>;
   countByPhoneNumberBefore(phoneNumber: PhoneNumber, before: Date): Promise<number>;
+  list(criteria: CallListCriteria): Promise<CallPage>;
 }
 
 export const CALL_REPOSITORY = Symbol('CALL_REPOSITORY');
+
+export type CallSortField = 'receivedAt' | 'durationSeconds';
+export type SortOrder = 'asc' | 'desc';
+
+export interface CallListCriteria {
+  page: number;
+  pageSize: number;
+  search?: string;
+  agent?: string;
+  isSpam?: boolean;
+  isRepeatCaller?: boolean;
+  from?: Date;
+  to?: Date;
+  sortBy: CallSortField;
+  order: SortOrder;
+}
+
+export interface CallPage {
+  items: Call[];
+  total: number;
+}

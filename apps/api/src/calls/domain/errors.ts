@@ -8,3 +8,4 @@ export abstract class DomainError extends Error {
 export class InvalidCallError extends DomainError {}
 export class InvalidPhoneNumberError extends DomainError {}
 export class CallNotFoundError extends DomainError {}
+export class InvalidQueryError extends DomainError {}
