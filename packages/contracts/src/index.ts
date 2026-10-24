@@ -63,3 +63,7 @@ export interface Paginated<T> {
 }
 
 export type ListCallsResponse = Paginated<CallDto>;
+
+export interface SetCallSpamRequest {
+  isSpam: boolean;
+}

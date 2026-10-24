@@ -34,6 +34,12 @@ class InMemoryCallRepository implements CallRepository {
       (c) => c.phoneNumber.equals(phoneNumber) && c.toProps().receivedAt < before,
     ).length;
   }
+
+  async findById(id: string): Promise<Call | null> {
+    return [...this.stored.values()].find((c) => c.id === id) ?? null;
+  }
+
+  async updateSpamStatus(): Promise<void> {}
 }
 
 class InMemoryIdempotencyStore implements IdempotencyStore {

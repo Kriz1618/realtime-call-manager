@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { config } from 'dotenv';
 import type { ConfigService } from '@nestjs/config';
 import { Call, NewCallInput } from '../domain/call';
@@ -28,7 +29,6 @@ describe('PrismaCallRepository (integration)', () => {
     repository = new PrismaCallRepository(prisma);
   });
 
-  // The suite runs against the dedicated test database, so the table can be emptied.
   beforeEach(() => prisma.call.deleteMany());
 
   afterAll(async () => {
@@ -87,7 +87,6 @@ describe('PrismaCallRepository (integration)', () => {
     expect(found?.toProps().receivedAt).toEqual(original.toProps().receivedAt);
   });
 
-  // New: only compiles once the repository has list() (commit 12).
   it('paginates without gaps or repeats when rows share the same sort value', async () => {
     const at = new Date('2026-10-23T12:00:00Z');
     for (let i = 0; i < 7; i++) {
@@ -101,5 +100,14 @@ describe('PrismaCallRepository (integration)', () => {
     expect(pages[0].total).toBe(7);
     expect(ids).toHaveLength(7);
     expect(new Set(ids).size).toBe(7);
+  });
+
+  it('persists the spam flag and finds a call by id', async () => {
+    const { call } = await repository.insertIfAbsent(Call.create(input('it-spam'), 0, new Date()));
+    call.markAsSpam();
+    await repository.updateSpamStatus(call);
+
+    expect((await repository.findById(call.id))?.isSpam).toBe(true);
+    expect(await repository.findById(randomUUID())).toBeNull();
   });
 });

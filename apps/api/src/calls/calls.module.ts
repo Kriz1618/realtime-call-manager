@@ -11,6 +11,7 @@ import { DomainExceptionFilter } from './presentation/domain-exception.filter';
 import { WebhooksController } from './presentation/webhooks.controller';
 import { CallsController } from './presentation/calls.controller';
 import { ListCalls } from './application/list-calls';
+import { SetCallSpamStatus } from './application/set-call-spam-status';
 
 @Module({
   controllers: [WebhooksController, CallsController],
@@ -32,7 +33,12 @@ import { ListCalls } from './application/list-calls';
       provide: ListCalls,
       inject: [CALL_REPOSITORY],
       useFactory: (calls: CallRepository) => new ListCalls(calls),
-  },
+    },
+    {
+      provide: SetCallSpamStatus,
+      inject: [CALL_REPOSITORY, CALL_EVENT_PUBLISHER],
+      useFactory: (calls: CallRepository, events: CallEventPublisher) => new SetCallSpamStatus(calls, events),
+    },
   ],
 })
 export class CallsModule {}

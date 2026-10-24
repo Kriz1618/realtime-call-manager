@@ -13,6 +13,8 @@ export interface CallRepository {
   findByCallId(callId: string): Promise<Call | null>;
   countByPhoneNumberBefore(phoneNumber: PhoneNumber, before: Date): Promise<number>;
   list(criteria: CallListCriteria): Promise<CallPage>;
+  findById(id: string): Promise<Call | null>;
+  updateSpamStatus(call: Call): Promise<void>;
 }
 
 export const CALL_REPOSITORY = Symbol('CALL_REPOSITORY');

@@ -59,6 +59,15 @@ export class PrismaCallRepository implements CallRepository {
       where: { phoneNumber: phoneNumber.value, receivedAt: { lt: before } },
     });
   }
+
+  async findById(id: string): Promise<Call | null> {
+    const row = await this.prisma.call.findUnique({ where: { id } });
+    return row ? toDomain(row) : null;
+  }
+
+  async updateSpamStatus(call: Call): Promise<void> {
+    await this.prisma.call.update({ where: { id: call.id }, data: { isSpam: call.isSpam } });
+  }
 }
 
 function toRow(call: Call): CallRow {
