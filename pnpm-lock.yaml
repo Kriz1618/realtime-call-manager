@@ -37,6 +37,9 @@ importers:
       class-validator:
         specifier: ^0.15.1
         version: 0.15.1
+      libphonenumber-js:
+        specifier: ^1.13.15
+        version: 1.13.15
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
