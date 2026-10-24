@@ -14,6 +14,7 @@ const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
+  setupFiles: ['reflect-metadata'],
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
