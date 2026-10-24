@@ -8,6 +8,7 @@ async function bootstrap() {
     instrument: ObserveInstrument,
   });
   const config = app.get(ConfigService);
+  app.enableShutdownHooks();
   await app.listen(config.get<number>('API_PORT') ?? 3000);
 }
 void bootstrap();

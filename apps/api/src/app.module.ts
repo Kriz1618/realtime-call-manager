@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
 import { CallsModule } from './calls/calls.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
+import { RedisModule } from './shared/redis/redis.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -25,6 +26,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       validate: validateEnv,
     }),
     PrismaModule,
+    RedisModule,
     CallsModule,
   ],
   controllers: [AppController],
