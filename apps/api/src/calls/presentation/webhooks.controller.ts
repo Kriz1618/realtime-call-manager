@@ -3,7 +3,7 @@ import type { RegisterCallResponse } from '@rcm/contracts';
 import type { Response } from 'express';
 import { RegisterIncomingCall } from '../application/register-incoming-call';
 import { IncomingCallWebhookDto } from './dto/incoming-call-webhook.dto';
-import { toCallDto } from './call.mapper';
+import { toCallDto } from '../call.mapper';
 import { WebhookSecretGuard } from './webhook-secret.guard';
 
 @Controller('webhooks')

@@ -1,5 +1,5 @@
 import type { CallDto } from '@rcm/contracts';
-import type { Call } from '../domain/call';
+import type { Call } from './domain/call';
 
 export function toCallDto(call: Call): CallDto {
   const p = call.toProps();
