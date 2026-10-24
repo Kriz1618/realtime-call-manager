@@ -3,5 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "engines": { "node": ">=22" },
-  "scripts": {}
+  "scripts": {
+    "build:contracts": "pnpm --filter @rcm/contracts build"
+  }
 }
