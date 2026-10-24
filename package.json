@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "engines": { "node": ">=22" },
   "scripts": {
-    "build:contracts": "pnpm --filter @rcm/contracts build"
+    "build:contracts": "pnpm --filter @rcm/contracts build",
+    "test:db:prepare": "bash scripts/prepare-test-db.sh"
   }
 }

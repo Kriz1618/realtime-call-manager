@@ -7,7 +7,6 @@ import { PrismaCallRepository } from './prisma-call.repository';
 
 config({ path: '../../.env', quiet: true });
 
-const TEST_PREFIX = 'it-';
 const phone = '+573001234567';
 
 const input = (callId: string): NewCallInput => ({
@@ -29,13 +28,11 @@ describe('PrismaCallRepository (integration)', () => {
     repository = new PrismaCallRepository(prisma);
   });
 
-  // Only rows created by this suite are removed; development data is untouched.
-  const cleanup = () => prisma.call.deleteMany({ where: { callId: { startsWith: TEST_PREFIX } } });
-
-  beforeEach(cleanup);
+  // The suite runs against the dedicated test database, so the table can be emptied.
+  beforeEach(() => prisma.call.deleteMany());
 
   afterAll(async () => {
-    await cleanup();
+    await prisma.call.deleteMany();
     await prisma.onModuleDestroy();
   });
 
@@ -63,16 +60,20 @@ describe('PrismaCallRepository (integration)', () => {
     expect(await prisma.call.count({ where: { callId: 'it-race' } })).toBe(1);
   });
 
-  it('counts only earlier calls from the same number', async () => {
+  it('counts only strictly earlier calls from the same number', async () => {
     await repository.insertIfAbsent(Call.create(input('it-a'), 0, new Date('2026-10-23T10:00:00Z')));
     await repository.insertIfAbsent(Call.create(input('it-b'), 1, new Date('2026-10-23T11:00:00Z')));
+    const number = PhoneNumber.create(phone);
 
-    const before = new Date('2026-10-23T10:30:00Z');
-    expect(await repository.countByPhoneNumberBefore(PhoneNumber.create(phone), before)).toBeGreaterThanOrEqual(1);
-
-    const strictlyBefore = new Date('2026-10-23T10:00:00Z');
-    const other = PhoneNumber.create('+573109998877');
-    expect(await repository.countByPhoneNumberBefore(other, strictlyBefore)).toBe(0);
+    expect(await repository.countByPhoneNumberBefore(number, new Date('2026-10-23T10:00:00Z'))).toBe(0);
+    expect(await repository.countByPhoneNumberBefore(number, new Date('2026-10-23T10:30:00Z'))).toBe(1);
+    expect(await repository.countByPhoneNumberBefore(number, new Date('2026-10-23T12:00:00Z'))).toBe(2);
+    expect(
+      await repository.countByPhoneNumberBefore(
+        PhoneNumber.create('+573109998877'),
+        new Date('2026-10-23T12:00:00Z'),
+      ),
+    ).toBe(0);
   });
 
   it('round-trips a call through the database', async () => {
@@ -84,5 +85,21 @@ describe('PrismaCallRepository (integration)', () => {
     expect(found?.isRepeatCaller).toBe(true);
     expect(found?.phoneNumber.value).toBe(phone);
     expect(found?.toProps().receivedAt).toEqual(original.toProps().receivedAt);
+  });
+
+  // New: only compiles once the repository has list() (commit 12).
+  it('paginates without gaps or repeats when rows share the same sort value', async () => {
+    const at = new Date('2026-10-23T12:00:00Z');
+    for (let i = 0; i < 7; i++) {
+      await repository.insertIfAbsent(Call.create(input(`it-p${i}`), 0, at));
+    }
+    const criteria = { pageSize: 3, sortBy: 'receivedAt', order: 'desc' } as const;
+
+    const pages = await Promise.all([1, 2, 3].map((page) => repository.list({ ...criteria, page })));
+    const ids = pages.flatMap((p) => p.items.map((c) => c.callId));
+
+    expect(pages[0].total).toBe(7);
+    expect(ids).toHaveLength(7);
+    expect(new Set(ids).size).toBe(7);
   });
 });
