@@ -8,7 +8,13 @@ import { createInterface } from 'node:readline/promises';
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const envFile = resolve(repositoryRoot, '.env');
 const requireFromApi = createRequire(resolve(repositoryRoot, 'apps/api/package.json'));
-const { isValidPhoneNumber } = requireFromApi('libphonenumber-js');
+let isValidPhoneNumber;
+   try {
+     ({ isValidPhoneNumber } = requireFromApi('libphonenumber-js'));
+   } catch {
+     console.error('Faltan dependencias: ejecuta "pnpm install" en la raíz del repositorio.');
+     process.exit(1);
+   }
 
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 
@@ -39,9 +45,7 @@ function shellQuote(value) {
 }
 
 function getWebhookConfig() {
-  const secret = process.env.WEBHOOK_SECRET;
-  if (!secret) throw new Error('Falta WEBHOOK_SECRET en el entorno o en el archivo .env raíz.');
-
+  const secret = process.env.WEBHOOK_SECRET ?? 'change-me';
   const baseUrl = (process.env.API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
   return { secret, url: `${baseUrl}/webhooks/calls` };
 }
@@ -99,7 +103,8 @@ async function main() {
       ? `desde ${sharedPhoneNumber}`
       : 'con números aleatorios';
   console.log(`Enviando ${count} evento(s) a ${url}, ${testDescription}`);
-  for (const [index, payload] of payloads.entries()) {
+
+  const responses = await Promise.all(payloads.map(async (payload) => {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -108,15 +113,21 @@ async function main() {
       },
       body: JSON.stringify(payload),
     });
-    const responseBody = await response.text();
+    return { response, responseBody: await response.text() };
+  }));
 
+  const failures = [];
+  for (const [index, { response, responseBody }] of responses.entries()) {
     if (!response.ok) {
-      throw new Error(`Evento ${index + 1}/${count}: HTTP ${response.status}: ${responseBody}`);
+      failures.push(`Evento ${index + 1}/${count}: HTTP ${response.status}: ${responseBody}`);
+      continue;
     }
 
     const result = JSON.parse(responseBody);
     console.log(`${index + 1}/${count}: HTTP ${response.status}, duplicated=${result.duplicated}`);
   }
+
+  if (failures.length > 0) throw new Error(failures.join('\n'));
 }
 
 try {
