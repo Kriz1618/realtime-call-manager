@@ -4,7 +4,7 @@ import { CallsTable } from './components/CallsTable';
 import { useCalls, useSetSpam } from './hooks/useCalls';
 import { useCallsStream, type StreamStatus } from './hooks/useCallsStream';
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 10;
 type SpamFilter = 'all' | 'spam' | 'clean';
 
 const STATUS_LABEL: Record<StreamStatus, { text: string; dot: string }> = {
