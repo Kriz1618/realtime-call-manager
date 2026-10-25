@@ -10,6 +10,7 @@ import {
   Sse,
 } from '@nestjs/common';
 import type { MessageEvent } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { CallDto, ListCallsResponse } from '@rcm/contracts';
 import { endWith, ignoreElements, interval, map, merge, Observable, startWith, takeUntil } from 'rxjs';
 import { CALL_EVENT_STREAM } from '../application/call-event-stream';
@@ -23,6 +24,7 @@ import { SetSpamDto } from './dto/set-spam.dto';
 const HEARTBEAT_MS = 25_000;
 
 @Controller('calls')
+@ApiTags('calls')
 export class CallsController {
   constructor(
     private readonly listCalls: ListCalls,
@@ -33,9 +35,16 @@ export class CallsController {
   @Get()
   async list(@Query() query: ListCallsQueryDto): Promise<ListCallsResponse> {
     const result = await this.listCalls.execute({
-      ...query,
+      page: query.page,
+      pageSize: query.pageSize,
+      search: query.search,
+      agent: query.agent,
+      isSpam: query.isSpam,
+      isRepeatCaller: query.isRepeatCaller,
       from: query.from ? new Date(query.from) : undefined,
       to: query.to ? new Date(query.to) : undefined,
+      sortBy: query.sortBy,
+      order: query.order,
     });
     return { ...result, items: result.items.map(toCallDto) };
   }

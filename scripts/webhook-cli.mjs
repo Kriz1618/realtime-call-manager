@@ -104,7 +104,7 @@ async function main() {
       : 'con números aleatorios';
   console.log(`Enviando ${count} evento(s) a ${url}, ${testDescription}`);
 
-  const responses = await Promise.all(payloads.map(async (payload) => {
+  const sendPayload = async (payload) => {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -114,7 +114,17 @@ async function main() {
       body: JSON.stringify(payload),
     });
     return { response, responseBody: await response.text() };
-  }));
+  };
+
+  let responses;
+  if (samePhone && !repeatSameEvent) {
+    responses = [];
+    for (const payload of payloads) {
+      responses.push(await sendPayload(payload));
+    }
+  } else {
+    responses = await Promise.all(payloads.map(sendPayload));
+  }
 
   const failures = [];
   for (const [index, { response, responseBody }] of responses.entries()) {
@@ -124,7 +134,9 @@ async function main() {
     }
 
     const result = JSON.parse(responseBody);
-    console.log(`${index + 1}/${count}: HTTP ${response.status}, duplicated=${result.duplicated}`);
+    console.log(
+      `${index + 1}: HTTP ${response.status}, duplicated=${result.duplicated}, repeatCaller=${result.call.isRepeatCaller} (${result.call.previousCallsCount} anteriores)`,
+    );
   }
 
   if (failures.length > 0) throw new Error(failures.join('\n'));

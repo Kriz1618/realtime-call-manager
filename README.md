@@ -68,9 +68,12 @@ Compose inicia PostgreSQL y Redis, aplica las migraciones y levanta API y fronte
 
 - Panel web: http://localhost:5173
 - API: http://localhost:3000
+- Swagger: http://localhost:3000/docs
 - Endpoint del webhook: `POST http://localhost:3000/webhooks/calls`
 
-El secreto del webhook se configura con `WEBHOOK_SECRET` en `.env`; el valor de ejemplo es `change-me`.
+El secreto del webhook se configura con `WEBHOOK_SECRET` en `.env`; el valor configurado para desarrollo es `RcM_webhook_auth_cb93cb15cf`.
+
+Para enviar un webhook desde Swagger, abre `/docs`, expande `POST /webhooks/calls` y pulsa **Try it out**. En los parámetros de la operación completa `X-Webhook-Secret` con el valor de `WEBHOOK_SECRET`; luego completa el payload y ejecuta la petición. Una llamada nueva responde `201`; si repites el mismo `callId`, responde `200` con `duplicated: true`.
 
 Los puertos `3000`, `5173`, `5432` y `6379` deben estar disponibles en el host. Para detener los servicios conserva los datos con `docker compose down`. Para eliminar también los volúmenes y la base de datos local usa `docker compose down -v` (borra los datos persistidos).
 
@@ -93,12 +96,12 @@ BODY=$(printf '{"callId":"%s","phoneNumber":"+573001234567","agent":"agente-07",
 
 curl -i -X POST http://localhost:3000/webhooks/calls \
 	-H 'Content-Type: application/json' \
-	-H 'X-Webhook-Secret: change-me' \
+	-H 'X-Webhook-Secret: RcM_webhook_auth_cb93cb15cf' \
 	-d "$BODY"
 
 curl -i -X POST http://localhost:3000/webhooks/calls \
 	-H 'Content-Type: application/json' \
-	-H 'X-Webhook-Secret: change-me' \
+	-H 'X-Webhook-Secret: RcM_webhook_auth_cb93cb15cf' \
 	-d "$BODY"
 ```
 
