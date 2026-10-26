@@ -4,6 +4,7 @@ import { CALL_EVENTS } from '@rcm/contracts';
 import type { CallDto, ListCallsQuery, ListCallsResponse } from '@rcm/contracts';
 import { API_URL } from '../../../api/calls';
 import { CALLS_KEY, prependCall, replaceCall } from '../callsCache';
+import { pauseAllAudio } from '../audioCoordinator';
 
 export type StreamStatus = 'connecting' | 'live' | 'offline';
 
@@ -11,9 +12,10 @@ interface Options {
   query: ListCallsQuery;
   /** True when new calls belong on screen: page 1, default order, no filters. */
   isLiveView: boolean;
+  onNewEvent?: (kind: 'created' | 'updated') => void;
 }
 
-export function useCallsStream({ query, isLiveView }: Options) {
+export function useCallsStream({ query, isLiveView, onNewEvent }: Options) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<StreamStatus>('connecting');
   const [pending, setPending] = useState(0);
@@ -44,6 +46,8 @@ export function useCallsStream({ query, isLiveView }: Options) {
 
     source.addEventListener(CALL_EVENTS.CREATED, (event) => {
       const call = parse(event);
+      pauseAllAudio();
+      onNewEvent?.('created');
       if (!latest.current.isLiveView) {
         setPending((n) => n + 1);
         return;
@@ -52,10 +56,14 @@ export function useCallsStream({ query, isLiveView }: Options) {
         prependCall(old, call),
       );
     });
-    source.addEventListener(CALL_EVENTS.SPAM_UPDATED, (event) => replaceCall(queryClient, parse(event)));
+    source.addEventListener(CALL_EVENTS.SPAM_UPDATED, (event) => {
+      pauseAllAudio();
+      onNewEvent?.('updated');
+      replaceCall(queryClient, parse(event));
+    });
 
     return () => source.close();
-  }, [queryClient]);
+  }, [queryClient, onNewEvent]);
 
   const refresh = () => {
     setPending(0);
