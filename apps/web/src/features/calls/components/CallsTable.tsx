@@ -3,6 +3,7 @@ import { RecordingPlayer } from './RecordingPlayer';
 
 interface Props {
   calls: CallDto[];
+  darkMode?: boolean;
   sortBy: CallSortField;
   order: SortOrder;
   busyId?: string;
@@ -13,42 +14,57 @@ interface Props {
 const formatDuration = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
-function SortHeader({ field, label, sortBy, order, onSort }: {
+function SortHeader({ field, label, sortBy, order, onSort, darkMode }: {
   field: CallSortField;
   label: string;
   sortBy: CallSortField;
   order: SortOrder;
   onSort: (field: CallSortField) => void;
+  darkMode: boolean;
 }) {
   const active = sortBy === field;
   return (
     <th className="whitespace-nowrap px-2 py-2 text-left font-medium">
-      <button type="button" onClick={() => onSort(field)} className="flex items-center gap-1 hover:text-slate-900">
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className={`flex items-center gap-1 ${darkMode ? 'hover:text-white' : 'hover:text-slate-900'}`}
+      >
         {label}
-        <span className={active ? 'text-slate-900' : 'text-transparent'}>{order === 'asc' ? '▲' : '▼'}</span>
+        <span className={active ? (darkMode ? 'text-white' : 'text-slate-900') : 'text-transparent'}>
+          {order === 'asc' ? '▲' : '▼'}
+        </span>
       </button>
     </th>
   );
 }
 
-export function CallsTable({ calls, sortBy, order, busyId, onSort, onToggleSpam }: Props) {
+export function CallsTable({ calls, darkMode = false, sortBy, order, busyId, onSort, onToggleSpam }: Props) {
+  const shellClass = darkMode ? 'overflow-x-auto rounded-lg border border-slate-700 bg-slate-900' : 'overflow-x-auto rounded-lg border border-slate-200 bg-white';
+  const theadClass = darkMode ? 'bg-slate-800 text-slate-200' : 'bg-slate-50 text-slate-600';
+  const bodyClass = darkMode ? 'divide-y divide-slate-700' : 'divide-y divide-slate-100';
+  const rowClass = darkMode ? 'text-slate-100' : 'text-slate-900';
+  const buttonClass = darkMode
+    ? 'w-24 whitespace-nowrap rounded border border-slate-600 px-1 py-1 text-center text-[10px] text-slate-100 hover:bg-slate-800 disabled:opacity-50'
+    : 'w-24 whitespace-nowrap rounded border border-slate-300 px-1 py-1 text-center text-[10px] hover:bg-slate-100 disabled:opacity-50';
+
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-slate-600">
+    <div className={shellClass}>
+      <table className={`w-full text-sm ${rowClass}`}>
+        <thead className={theadClass}>
           <tr>
             <th className="whitespace-nowrap px-2 py-2 text-left font-medium">Número</th>
             <th className="whitespace-nowrap px-2 py-2 text-left font-medium">Agente</th>
-            <SortHeader field="durationSeconds" label="Duración" sortBy={sortBy} order={order} onSort={onSort} />
-            <SortHeader field="receivedAt" label="Recibida" sortBy={sortBy} order={order} onSort={onSort} />
+            <SortHeader field="durationSeconds" label="Duración" sortBy={sortBy} order={order} onSort={onSort} darkMode={darkMode} />
+            <SortHeader field="receivedAt" label="Recibida" sortBy={sortBy} order={order} onSort={onSort} darkMode={darkMode} />
             <th className="min-w-40 px-2 py-2 text-left font-medium">Estado</th>
             <th className="whitespace-nowrap px-2 py-2 text-left font-medium">Grabación</th>
             <th className="w-28 px-2 py-2" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className={bodyClass}>
           {calls.map((call) => (
-            <tr key={call.id} className={call.isSpam ? 'bg-red-50 text-slate-500' : undefined}>
+            <tr key={call.id} className={call.isSpam ? (darkMode ? 'bg-red-950/30 text-slate-400' : 'bg-red-50 text-slate-500') : undefined}>
               <td className="whitespace-nowrap px-2 py-2 font-mono">{call.phoneNumber}</td>
               <td className="whitespace-nowrap px-2 py-2">{call.agent}</td>
               <td className="whitespace-nowrap px-2 py-2 text-xs tabular-nums">
@@ -79,7 +95,7 @@ export function CallsTable({ calls, sortBy, order, busyId, onSort, onToggleSpam 
                   type="button"
                   disabled={busyId === call.id}
                   onClick={() => onToggleSpam(call)}
-                  className="w-24 whitespace-nowrap rounded border border-slate-300 px-1 py-1 text-center text-[10px] hover:bg-slate-100 disabled:opacity-50"
+                  className={buttonClass}
                 >
                   {call.isSpam ? 'Quitar spam' : 'Marcar spam'}
                 </button>

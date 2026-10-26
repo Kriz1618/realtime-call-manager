@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { registerAudioPlayer } from '../audioCoordinator';
 
 interface Props {
   url: string;
@@ -6,10 +7,16 @@ interface Props {
 
 export function RecordingPlayer({ url }: Props) {
   const [unavailable, setUnavailable] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return registerAudioPlayer(audioRef.current);
+  }, []);
 
   return (
     <div className="relative h-8 w-36 shrink-0">
       <audio
+        ref={audioRef}
         controls
         preload="none"
         src={url}
