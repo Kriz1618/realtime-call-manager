@@ -58,7 +58,7 @@ export function CallsPage() {
   const { data, isPending, isError, error, refetch } = useCalls(query);
   const setSpam = useSetSpam();
 
-  const { status, pending, refresh } = useCallsStream({
+  const { status, pending, newCallId, refresh } = useCallsStream({
     query,
     isLiveView,
     onNewEvent: notify,
@@ -162,6 +162,7 @@ export function CallsPage() {
       {data && data.items.length > 0 && (
         <CallsTable
           calls={data.items}
+          newCallId={newCallId}
           darkMode={isDark}
           sortBy={sortBy}
           order={order}

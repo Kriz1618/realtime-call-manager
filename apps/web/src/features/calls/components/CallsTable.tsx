@@ -3,6 +3,7 @@ import { RecordingPlayer } from './RecordingPlayer';
 
 interface Props {
   calls: CallDto[];
+  newCallId?: string;
   darkMode?: boolean;
   sortBy: CallSortField;
   order: SortOrder;
@@ -39,7 +40,7 @@ function SortHeader({ field, label, sortBy, order, onSort, darkMode }: {
   );
 }
 
-export function CallsTable({ calls, darkMode = false, sortBy, order, busyId, onSort, onToggleSpam }: Props) {
+export function CallsTable({ calls, newCallId, darkMode = false, sortBy, order, busyId, onSort, onToggleSpam }: Props) {
   const shellClass = darkMode ? 'overflow-x-auto rounded-lg border border-slate-700 bg-slate-900' : 'overflow-x-auto rounded-lg border border-slate-200 bg-white';
   const theadClass = darkMode ? 'bg-slate-800 text-slate-200' : 'bg-slate-50 text-slate-600';
   const bodyClass = darkMode ? 'divide-y divide-slate-700' : 'divide-y divide-slate-100';
@@ -64,7 +65,15 @@ export function CallsTable({ calls, darkMode = false, sortBy, order, busyId, onS
         </thead>
         <tbody className={bodyClass}>
           {calls.map((call) => (
-            <tr key={call.id} className={call.isSpam ? (darkMode ? 'bg-red-950/30 text-slate-400' : 'bg-red-50 text-slate-500') : undefined}>
+            <tr
+              key={call.id}
+              className={[
+                call.isSpam ? (darkMode ? 'bg-red-950/30 text-slate-400' : 'bg-red-50 text-slate-500') : '',
+                call.id === newCallId ? 'call-insert' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
               <td className="whitespace-nowrap px-2 py-2 font-mono">{call.phoneNumber}</td>
               <td className="whitespace-nowrap px-2 py-2">{call.agent}</td>
               <td className="whitespace-nowrap px-2 py-2 text-xs tabular-nums">
